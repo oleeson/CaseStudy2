@@ -1,0 +1,84 @@
+---
+title: "Question2 Time Series Financial Data"
+output: 
+  html_document:
+    keep md: TRUE
+---
+
+####The Stock: CO
+
+The stock we are following is CO: China Cord Blood Corporation
+CO trades on the NYSE. 
+
+According to the China Cord Blood Corporation webiste, CO: 
+  
+*"is a life sciences enterprise dedicated to the storage of umbilical cord blood stem cells ... China Cord Blood Corporation provides exclusive cord blood storage services in the Beijing Municipality, the Guangdong Province and the Zhejiang Province...
+China Cord Blood Corporation is also the largest cord blood banking operator in China"*
+
+  
+  
+####Download the Data 
+```{r}
+library(tseries)
+COdata <- get.hist.quote('CO', quote="Close")
+
+```
+
+####Calculate the log returns
+```{r}
+COreturn <- log(lag(COdata)) - log(COdata)
+#how many retuns do we have?
+length(COreturn)
+
+```
+We calculate the log of returns for the CO stock. 
+We have `r length(COreturn)` return data points for our analysis.
+
+####Calculate volatility measure 
+```{r}
+#250 is number of trading days/year
+COvol <- sd(COreturn)*sqrt(250)*100
+COvol
+```
+The CO stock is quite volatile. Current volatility is `r COvol`
+
+####Calculate volatility over entire length of series for the different decay factors
+```{r}
+#Volatility Function
+#Calculates a list of volatilities for all stock returns in a list
+vol <- function(d, logrets){
+  var=0
+  lam=0
+  varlist<- c()
+  for (r in logrets){
+    lam=lam*(1-1/d) +1
+  var = (1 - 1/lam)*var + (1/lam)*r^2
+    varlist <-c(varlist,var)
+  }
+  sqrt(varlist)
+}
+
+#Calculate volatility over list of CO returns for varying decay factors
+#gives high weight to past volatility
+volest <-vol(10,COreturn)
+volest2 <-vol(25,COreturn)
+volest3 <-vol(50,COreturn)
+volest4 <- vol(100,COreturn)
+```
+
+####Plot the results: 
+
+Overlay the volatility curves
+```{r}
+#plot volatilities 
+plot(volest,type="l", col = "pink4")
+lines(volest2, type="l", col="lightgreen")
+lines(volest3, type="l", col="lightblue")
+lines(volest4, type = "l", col="orange")
+```
+
+
+
+##END of Q2
+
+```
